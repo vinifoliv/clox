@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "common.h"
+#include "compiler.h"
 #include "debug.h"
 #include "vm.h"
 
@@ -107,16 +108,14 @@ static InterpretResult run() {
 #undef BINARY_OP
 }
 
-/**
- * Interprets a chunk of bytecode by setting the VM's current chunk
- * and instruction pointer, then executing the bytecode instructions.
- *
- * @param chunk the chunk of bytecode to interpret
- * @return the result of the interpretation process
- */
 
-InterpretResult interpret(Chunk* chunk) {
-    vm.chunk = chunk;
-    vm.ip = vm.chunk->code;
-    return run();
+/**
+ * Interprets the given source code by compiling it and returning the result.
+ *
+ * @param source the source code to interpret
+ * @return INTERPRET_OK upon successful compilation
+ */
+InterpretResult interpret(const char* source) {
+    compile(source);
+    return INTERPRET_OK;
 }
