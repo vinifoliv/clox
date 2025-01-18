@@ -9,7 +9,7 @@ void compile(const char* source) {
     for (;;) {
         Token token = scanToken();
         if (token.line != line) {
-            printf("%4d", token.line);
+            printf("%4d ", token.line);
             line = token.line;
         } else {
             printf("   | ");
