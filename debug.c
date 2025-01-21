@@ -70,13 +70,13 @@ int disassembleInstruction(Chunk* chunk, int offset) {
         case OP_CONSTANT:
             return constantInstruction("OP_CONSTANT", chunk, offset);
         case OP_ADD:
-            return simpleInstruction("OPP_ADD", offset);
+            return simpleInstruction("OP_ADD", offset);
         case OP_SUBTRACT:
-            return simpleInstruction("OPP_SUBTRACT", offset);
+            return simpleInstruction("OP_SUBTRACT", offset);
         case OP_MULTIPLY:
-            return simpleInstruction("OPP_MULTIPLY", offset);
+            return simpleInstruction("OP_MULTIPLY", offset);
         case OP_DIVIDE:
-            return simpleInstruction("OPP_DIVIDE", offset);
+            return simpleInstruction("OP_DIVIDE", offset);
         case OP_NEGATE:
             return simpleInstruction("OP_NEGATE", offset);
         case OP_RETURN:
