@@ -244,6 +244,14 @@ static void number() {
     emitConstant(value);
 }
 
+/**
+ * Parses a unary expression.
+ *
+ * This function assumes that the current token is the operator of the unary
+ * expression. It parses the operand of the expression by calling
+ * parsePrecedence with the PREC_UNARY precedence. It then emits an OP_NEGATE
+ * bytecode instruction.
+ */
 static void unary() {
     TokenType operatorType  = parser.previous.type;
 
@@ -299,6 +307,22 @@ ParseRule rules[] = {
     [TOKEN_EOF]           = {NULL,     NULL,   PREC_NONE}
 };
 
+/**
+ * Parses an expression with a given precedence.
+ *
+ * This method will advance the parser to the next token and then parse the
+ * expression using the prefix rule associated with the current token. If the
+ * current token does not have a prefix rule (i.e. it is not an expression), an
+ * error message is reported. Otherwise, the prefix rule is called to parse the
+ * expression.
+ *
+ * After the expression is parsed, the method will then parse any trailing
+ * infix expressions until the precedence of the trailing expressions is
+ * less than the given precedence. This is done by repeatedly advancing to the
+ * next token and calling the infix rule associated with the current token.
+ *
+ * @param precedence the precedence of the expressions to parse
+ */
 static void parsePrecedence(Precedence precedence) {
     advance();
     ParseFn prefixRule = getRule(parser.previous.type)->prefix;
@@ -326,10 +350,30 @@ static ParseRule* getRule(TokenType type) {
     return &rules[type];
 }
 
+
+/**
+ * Parses an expression with the lowest precedence (assignment).
+ *
+ * This method will parse an expression with the lowest precedence by calling
+ * parsePrecedence with the PREC_ASSIGNMENT parameter. This will parse an
+ * expression with any precedence since assignment has the lowest precedence.
+ */
 static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
+/**
+ * Compiles the given source code into bytecode and stores it in the provided chunk.
+ *
+ * This function initializes the scanner with the source code and sets up the
+ * compiling environment. It processes the source code by advancing through
+ * end of the source is reached, at which point an OP_RETURN instruction is emitted.
+ * Any errors encountered during compilation set the parser's hadError flag to true.
+ *
+ * @param source the source code to compile
+ * @param chunk the chunk where the compiled bytecode will be stored
+ * @return true if the compilation was successful without errors, false otherwise
+ */
 bool compile(const char* source, Chunk* chunk) { 
     initScanner(source);
     compilingChunk = chunk;
