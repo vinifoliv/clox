@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "common.h"
@@ -13,6 +14,19 @@ VM vm;
  */
 static void resetStack() {
     vm.stackTop = vm.stack;
+}
+
+static void runtimeError(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputs("\n", stderr);
+
+    size_t instruction = vm.ip - vm.chunk->code - 1;
+    int line = vm.chunk->lines[instruction];
+    fprintf(stderr, "[line %d] in script\n", line);
+    resetStack();
 }
 
 void initVM() {
@@ -48,6 +62,19 @@ Value pop() {
 }
 
 /**
+ * Returns the value at a specified distance from the top of the stack
+ * without removing it. The distance is measured from the top of the stack,
+ * where a distance of 0 refers to the topmost element.
+ *
+ * @param distance the distance from the top of the stack
+ * @return the value at the specified distance
+ */
+
+static Value peek(int distance) {
+    return vm.stackTop[-1 - distance];
+}
+
+/**
  * Executes the bytecode instructions of the current chunk by continuously
  * reading and interpreting each instruction pointed to by the VM's instruction
  * pointer. Uses macros to read the next byte instruction and retrieve constant
@@ -59,13 +86,17 @@ Value pop() {
  */
 static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++) // Gets next instruction and updates IP to the one after it
-#define READ_CONSTANT()   \
+#define READ_CONSTANT()                                   \
     (vm.chunk->constants.values[READ_BYTE()])
-#define BINARY_OP(op)     \
-    do {                  \
-        double b = pop(); \
-        double a = pop(); \
-        push(a op b);     \
+#define BINARY_OP(valueType, op)                                     \
+    do {                                                  \
+        if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
+            runtimeError("Operands must be numbers.");    \
+            return INTERPRET_RUNTIME_ERROR;               \
+        }                                                 \
+        double b = AS_NUMBER(pop());                      \
+        double a = AS_NUMBER(pop());                      \
+        push(valueType(a op b));                          \
     } while (false)
 
     for (;;) {
@@ -86,15 +117,17 @@ static InterpretResult run() {
                 push(constant);
                 break;
             }
-            case OP_ADD:      BINARY_OP(+); break;
-            case OP_SUBTRACT: BINARY_OP(-); break;
-            case OP_MULTIPLY: BINARY_OP(*); break;
-            case OP_DIVIDE:   BINARY_OP(/); break;
-            case OP_NEGATE:   {
-                Value* value = vm.stackTop - 1;
-                *value = -(*value);
+            case OP_ADD:      BINARY_OP(NUMBER_VAL, +); break;
+            case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;
+            case OP_MULTIPLY: BINARY_OP(NUMBER_VAL, *); break;
+            case OP_DIVIDE:   BINARY_OP(NUMBER_VAL, /); break;
+            case OP_NEGATE:
+                if (!IS_NUMBER(peek(0))) {
+                    runtimeError("Operand must be a number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(NUMBER_VAL(-AS_NUMBER(pop())));
                 break;
-            }
             case OP_RETURN: {
                 printValue(pop());
                 printf("\n");

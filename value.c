@@ -48,5 +48,5 @@ void freeValueArray(ValueArray* array) {
  * @param value the value to print
  */
 void printValue(Value value) {
-    printf("%g", value);
+    printf("%g", AS_NUMBER(value));
 }
