@@ -43,10 +43,34 @@ void freeValueArray(ValueArray* array) {
 }
 
 /**
- * Prints a Value to the console. The value is printed as a double.
+ * Prints a value to the standard output.
  *
  * @param value the value to print
  */
 void printValue(Value value) {
-    printf("%g", AS_NUMBER(value));
+    switch (value.type) {
+        case VAL_BOOL:
+            printf(AS_BOOL(value) ? "true" : "false");
+            break;
+        case VAL_NIL: printf("nil"); break;
+        case VAL_NUMBER: printf("%g", AS_NUMBER(value)); break;
+    }
+}
+
+/**
+ * Checks if two values are equal. The values are equal if they have the same
+ * type and their values are equal.
+ *
+ * @param a the first value to compare
+ * @param b the second value to compare
+ * @return true if the values are equal, false otherwise
+ */
+bool valuesEqual(Value a, Value b) {
+    if (a.type != b.type) return false;
+    switch (a.type) {
+        case VAL_BOOL:   return AS_BOOL(a) == AS_BOOL(b);
+        case VAL_NIL:    return true;
+        case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+        default:         return false; // Unreachable
+    }
 }
