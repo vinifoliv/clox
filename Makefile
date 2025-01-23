@@ -7,12 +7,15 @@ default: $(TARGET)
 	./$(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	@$(CC) $(CFLAGS) -o $@ $^
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	@rm -f $(OBJS) $(TARGET)
 
-.PHONY: default clean
+count:
+	@find . -name "*.c" -print0 | xargs -0 wc -l
+
+.PHONY: default clean count
